@@ -1,0 +1,6 @@
+Module bundlers: 
+    Basically they take all the javascript and combine them to form a single
+    javascript file that can be used to deploy the webapp.
+    Without using a module bundler, you wont be able to use npm modules for your webapp because
+    the app does not know how to combine npm module files in node_modules folder.
+    

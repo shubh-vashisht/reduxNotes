@@ -1,0 +1,227 @@
+Question: Why use redux?
+Answer: state management solution to help with issues on maintaing state trhroughout different components.
+
+How does it do that?
+Answer: We store all the applictaion state inside a center repository (javascript object). A single source of truth.
+Different pieces of UI no longer need to store state. It also helps to track state of the data stored within it.
+
+Pros of redux: 
+    1. Predictable state changes
+    2. Centralized state
+    3. Easy debugging
+    4. Preserve page state
+    5. Undo/redo
+
+Cons: 
+    1. Complexity
+    2. Verbosity (includes boiler plate code)
+
+When not to use redux:
+1. Tight budget
+2. Small to medium-size apps
+3. Simple UI/data flow
+4. Static data
+
+Pure functions (properties): 
+    1. No random values
+    2. No current date/time
+    3. No global state(DOM, files, db, etc)
+    4. No mutation of parameters
+
+Benefits of pure functions:
+1. Self-documenting. Everything you need is mentioned in the argument list
+2. Easily testable
+3. Concurrency
+4. Cacheable
+
+Immutabilty: Once you create an object, you cant change or mutate it. 
+
+Benefits of Immutabilty:
+1. Predictability
+2. Faster change detection
+3. Concurrency
+
+Cons of Immutabilty:
+1. Performance
+2. Memory Overhead
+
+Redux Architecture:
+1. We store everything in a javascript object called store
+2. We cant directly modify the store (immutable object)
+3. Create a function that takes the store as an argument and replies with a copy.
+4. Reducer: Function to take the store and reply with a copy
+5. Action (Object): Tells the reducer what to change. 
+6. Reducer(event handlers like functions)
+
+action => store => reducer
+Desining an app with Redux: 
+1. Design the store
+2. Define the actions
+3. Create a reducer
+4. Set up the store
+
+bug: {
+    id: 1,
+    description: "",
+    resolved: false
+}
+
+actions: [add a bug, mark as resolved, delete a bug]
+action = {type: 'bugRemoved', payload: { id:"1" }}
+
+## in order to use an action we need to do something like: 
+store.dispatch({
+  type: "bugAdded",
+  payload: {
+    description: "Bug1",
+  },
+});
+
+## in order to use an action to remove the store, we need to do something like:
+store.dispatch({
+  type: "bugRemoved",
+  payload: {
+    id: 1,
+  },
+});
+
+These function calls are based on how you have written your reducer.
+
+Additionaly: 
+we can subcribe to a store changes that can be used in react useeffect to 
+change state whenever store has changed. 
+
+        store.subscribe(() => {
+        console.log("store changed!", store.getState());
+        });
+
+Example:    
+    Additionaly:  This subcribe button returns a function,
+        that we can use to unsubscribe whenever we want. 
+
+    const unsubscribe = store.subscribe(() => {
+        console.log("store changed!", store.getState());
+        }); 
+    
+    unsubscribe();
+
+Dux Pattern: 
+  1. Store reducer. actions and actionTypes withing a single file.
+  2. Makes it more accessible.
+  3. Make reducer a default export.
+
+
+Redux toolkit helps making code easier. Very easy to use:
+
+
+In redux, we have two ways to store the state:
+1. Either create a global store (one way to use redux... totally fine)
+2. Use everything in store, easier debugging. (More state we put in the store, more we can get out of redux)
+//Never store form state in a redux store. 
+
+Also we should store slices with each other, under a single slice called entities.
+We can also store an additional slice called auth, which tells us the authorization information.
+We can also store a slice called ui that store information such as search info or sortBy information.
+
+example store: 
+{
+  entities: { 
+    projects: {},
+    bugs: {}
+  },
+  auth: {
+    userId:1,
+    name: 'John'
+  },
+  ui: {
+    bugs: {
+      query:'...',
+      sortBy:'...'
+    }
+  }
+
+}
+
+basically: 
+
+slice creates a reducer
+combineReducer combines one or more reducers.
+We use reducers when configuring store
+Reducers also have actions that we can then use inside the dispatch function
+of the store.
+
+//inside bugs
+const { bugAdded, bugResolved, bugRemoved } = slice.actions;
+const bugsReducer = slice.reducer;
+
+//inside projects
+const { projectAdded, projectRemoved } = slice.actions;
+const projectsReducer = slice.reducer;
+
+//inside reducer
+const combineReducer = combineReducers({
+  bugs: bugsReducer,
+  projects: projectsReducer,
+});
+
+
+//inside configure store:
+import reducer from "./reducer";
+export default function () {
+  return configureStore({ reducer });
+}
+
+//inside index.js
+import configureStore from "./store/configureStore.js";
+import { projectAdded, projectRemoved } from "./store/projects.js";
+import { bugAdded, bugRemoved, bugResolved } from "./store/bugs.js";
+const store = configureStore();
+function add() {
+  store.dispatch(projectAdded({ name: "project 2" }));
+  store.dispatch(bugAdded({ description: "bug 1" }));
+  store.dispatch(projectAdded({ name: "project 3" }));
+}
+
+Basically we create selector functions inside of a slice module. This helps in keeping all
+functions related to one slice in the same file.
+We then memoize these selector functions because they will help us in not computing the same thing again
+and again. 
+
+Now obviously there is a way to do this better and that is through createSelector function in redux.
+See the bugs.js file to see its implementation.
+
+Middleware functions are used when an action is passed to the state. 
+Mostly used to log or to check autorization of a user.
+
+We create Middleware like: 
+const logger = (store) => (next) => (action) => {
+  console.log("store: ", store);
+  console.log("next: ", next);
+  console.log("action: ", action);
+  next(action);
+};
+
+and then add it to a store like:
+export default function () {
+  return configureStore({
+    reducer,
+    middleware: [logger],
+  });
+}
+
+Also in order to parameterize a middleware function, we can do: 
+const logger = (parameter) => (store) => (next) => (action) => {
+  console.log("store: ", store);
+  console.log("next: ", next);
+  console.log("action: ", action);
+  next(action);
+};
+n then call 
+export default function () {
+  return configureStore({
+    reducer,
+    middleware: [logger({environment: "develop"})],
+  });
+}
+In this case the parameter argument of logger is going to take the
+value of {environment : "develop"}
